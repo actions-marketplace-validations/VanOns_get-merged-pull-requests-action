@@ -1,5 +1,5 @@
-name: 'Get merged pull requests'
-description: 'Compare 2 tags and retrieve all the pull requests merged between them.'
+name: 'Get Merged Pull Requests'
+description: 'Compare two tags and retrieve all the pull requests merged between them.'
 author: 'Van Ons'
 branding:
   icon: 'git-pull-request'
@@ -17,19 +17,23 @@ inputs:
   previous_tag:
     description: 'The previous tag to use. Defaults to one tag before the current tag.'
     required: false
-  return_type:
-    description: 'What data to return. Options are: `title_only`, `all`.'
-    required: false
-    default: title_only
   commit_is_pull_request_regex:
     description: "The regex to use to determine if a commit is a pull request merge commit. This is checked against a commit's title. Default regex: `^Merge pull request.*`."
     required: false
+  apply_commit_is_pull_request_regex:
+    description: 'Whether to apply `commit_is_pull_request_regex` to the commits.'
+    required: false
+    default: 'false'
   pull_request_regex:
     description: "The regex to use if you want to filter the pull requests. This is checked against a pull request's title. Example regex: `^\\[Feat].*`."
     required: false
+  commit_limit:
+    description: 'Limit the number of commits to retrieve.'
+    required: false
+    default: '250'
 outputs:
-  pull_requests:
-    description: 'The pull requests merged between the 2 tags.'
+  pull_requests_file:
+    description: 'The path to the JSON file containing the pull requests merged between the two tags.'
 runs:
-  using: node16
+  using: node20
   main: dist/index.js

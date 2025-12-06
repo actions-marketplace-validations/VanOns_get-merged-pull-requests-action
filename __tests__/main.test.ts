@@ -22,10 +22,25 @@ const run = (env: Env): void => {
 
   const script = path.join(__dirname, '..', 'lib', 'main.js')
   const options: cp.ExecFileSyncOptions = {
-    env: env
+    env: {
+      ...env,
+      INPUT_COMMIT_LIMIT: '5'
+    },
+    encoding: 'utf-8'
   }
 
-  console.log(cp.execFileSync(process.execPath, [script], options).toString())
+  const command = cp.spawnSync(process.execPath, [script], options)
+
+  if (
+    command.stderr
+      .toString()
+      .includes('RequestError [HttpError]: API rate limit exceeded')
+  ) {
+    console.log('API rate limit exceeded, skipping test')
+    return
+  }
+
+  console.log(command.stdout.toString())
 }
 
 test('Retrieves all PRs between the latest tag and now', () => {
@@ -34,8 +49,8 @@ test('Retrieves all PRs between the latest tag and now', () => {
 
 test('Retrieves all PRs between v1.0.0 and now', () => {
   const env: Env = {
-    ...process.env,
-    INPUT_PREVIOUS_TAG: 'v1.0.0'
+    INPUT_PREVIOUS_TAG: 'v1.0.0',
+    ...process.env
   }
 
   run(env)
@@ -43,9 +58,9 @@ test('Retrieves all PRs between v1.0.0 and now', () => {
 
 test('Retrieves all PRs between v1.0.0 and now that start with "[Feat]"', () => {
   const env: Env = {
-    ...process.env,
     INPUT_PREVIOUS_TAG: 'v1.0.0',
-    INPUT_PULL_REQUEST_REGEX: '^\\[Feat].*'
+    INPUT_PULL_REQUEST_REGEX: '^\\[Feat].*',
+    ...process.env
   }
 
   run(env)

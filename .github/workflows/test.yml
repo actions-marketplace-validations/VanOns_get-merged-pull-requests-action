@@ -4,37 +4,55 @@ on:
   workflow_dispatch:
   pull_request:
     types: [opened, reopened, synchronize]
-#  push:
-#    branches:
-#      - main
-#      - 'releases/*'
 
 jobs:
   build: # make sure build/ci work properly
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
-      - name: Install dependencies
-        run: npm install
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install npm dependencies
+        run: npm ci
+
       - name: Run all scripts
         run: |
           INPUT_GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} npm run all
+
   get-prs: # make sure we can actually execute the action
+    needs: build
     runs-on: ubuntu-latest
+    environment: tests
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
+
       - name: Get merged pull requests
         uses: ./
         id: pull_requests
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          previous_tag: v1.0.0
+          commit_limit: 1
+
       - name: Print merged pull requests
+        env:
+          PULL_REQUESTS_FILE: ${{ steps.pull_requests.outputs.pull_requests_file }}
         run: |
-          pull_requests='${{ steps.pull_requests.outputs.pull_requests }}'
-          escaped_json=$(echo "$pull_requests" | sed "s/'/\\\\'/g")
-          titles=$(echo "$escaped_json" | jq -r '.[].title')
+          if [ -z "$PULL_REQUESTS_FILE" ] || [ ! -f "$PULL_REQUESTS_FILE" ]; then
+            echo "No pull requests were merged between the current and previous tag."
+            exit 0
+          fi
+          
+          titles=$(jq -r '.[].title' "$PULL_REQUESTS_FILE")
+
           if [ -z "$titles" ]; then
             echo "No pull requests were merged between the current and previous tag."
           else

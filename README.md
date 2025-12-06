@@ -1,30 +1,26 @@
-[![Test build](https://github.com/VanOns/get-merged-pull-requests-action/actions/workflows/test.yml/badge.svg)](https://github.com/VanOns/get-merged-pull-requests-action/actions/workflows/test.yml)
-[![MIT License](https://img.shields.io/github/license/VanOns/get-merged-pull-requests-action)](https://github.com/VanOns/get-merged-pull-requests-action/blob/main/LICENSE)
-[![GitHub Release](https://img.shields.io/github/v/release/VanOns/get-merged-pull-requests-action?sort=semver)](https://github.com/VanOns/get-merged-pull-requests-action/releases/latest)
+<p align="center"><img src="art/social-card.png" alt="Social card of GitHub Action: Get merged pull requests"></p>
 
 <!-- start title -->
 
-# GitHub Action: Get merged pull requests
+# GitHub Action: Get Merged Pull Requests
 
 <!-- end title -->
 
+[![Latest version](https://img.shields.io/github/release/VanOns/get-merged-pull-requests-action.svg?style=flat-square)](https://github.com/VanOns/get-merged-pull-requests-action/releases)
+[![Tests](https://img.shields.io/github/actions/workflow/status/VanOns/get-merged-pull-requests-action/test.yml?style=flat-square)](https://github.com/VanOns/get-merged-pull-requests-action/actions/workflows/test.yml)
+[![Issues](https://img.shields.io/github/issues/VanOns/get-merged-pull-requests-action?style=flat-square)](https://github.com/VanOns/get-merged-pull-requests-action/issues)
+[![License](https://img.shields.io/github/license/VanOns/get-merged-pull-requests-action?style=flat-square)](https://github.com/VanOns/get-merged-pull-requests-action/blob/main/LICENSE.md)
+
+
 <!-- start description -->
 
-Compare 2 tags and retrieve all the pull requests merged between them.
+Compare two tags and retrieve all the pull requests merged between them.
 
 <!-- end description -->
 
-# Return format
+## Quick start
 
-The pull requests are returned in a certain format, depending on the `return_type` value:
-
-- **`title_only` (default)**
-  ```json
-  [{ "title": "Title of the pull request" }]
-  ```
-- **`all`**: see [here](https://docs.github.com/en/rest/search/search?apiVersion=2022-11-28#search-issues-and-pull-requests) for a full overview.
-
-# Usage
+### Usage
 
 <!-- start usage -->
 
@@ -44,37 +40,80 @@ The pull requests are returned in a certain format, depending on the `return_typ
     # The previous tag to use. Defaults to one tag before the current tag.
     previous_tag: ""
 
-    # What data to return. Options are: `title_only`, `all`.
-    # Default: title_only
-    return_type: ""
-
     # The regex to use to determine if a commit is a pull request merge commit. This
     # is checked against a commit's title. Default regex: `^Merge pull request.*`.
     commit_is_pull_request_regex: ""
 
+    # Whether to apply `commit_is_pull_request_regex` to the commits.
+    # Default: false
+    apply_commit_is_pull_request_regex: ""
+
     # The regex to use if you want to filter the pull requests. This is checked
     # against a pull request's title. Example regex: `^\[Feat].*`.
     pull_request_regex: ""
+
+    # Limit the number of commits to retrieve.
+    commit_limit: ""
 ```
 
 <!-- end usage -->
 
-# Inputs
+### Inputs
 
 <!-- start inputs -->
 
-| **Input**                          | **Description**                                                                                                                                             | **Default**  | **Required** |
-| ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | ------------ |
-| **`github_token`**                 | The GitHub token to use.                                                                                                                                    |              | **true**     |
-| **`repo`**                         | The repository to use. Defaults to current repository. Expected format: `owner/repo`.                                                                       |              | **false**    |
-| **`current_tag`**                  | The current tag to use. Defaults to current/latest tag.                                                                                                     |              | **false**    |
-| **`previous_tag`**                 | The previous tag to use. Defaults to one tag before the current tag.                                                                                        |              | **false**    |
-| **`return_type`**                  | What data to return. Options are: `title_only`, `all`.                                                                                                      | `title_only` | **false**    |
-| **`commit_is_pull_request_regex`** | The regex to use to determine if a commit is a pull request merge commit. This is checked against a commit's title. Default regex: `^Merge pull request.*`. |              | **false**    |
-| **`pull_request_regex`**           | The regex to use if you want to filter the pull requests. This is checked against a pull request's title. Example regex: `^\[Feat].*`.                      |              | **false**    |
+| **Input**                                | **Description**                                                                                                                                             | **Default**  | **Required** |
+|------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------|--------------|
+| **`github_token`**                       | The GitHub token to use.                                                                                                                                    |              | **true**     |
+| **`repo`**                               | The repository to use. Defaults to current repository. Expected format: `owner/repo`.                                                                       |              | **false**    |
+| **`current_tag`**                        | The current tag to use. Defaults to current/latest tag.                                                                                                     |              | **false**    |
+| **`previous_tag`**                       | The previous tag to use. Defaults to one tag before the current tag.                                                                                        |              | **false**    |
+| **`commit_is_pull_request_regex`**       | The regex to use to determine if a commit is a pull request merge commit. This is checked against a commit's title. Default regex: `^Merge pull request.*`. |              | **false**    |
+| **`apply_commit_is_pull_request_regex`** | Whether to apply `commit_is_pull_request_regex` to the commits.                                                                                             |              | **false**    |
+| **`pull_request_regex`**                 | The regex to use if you want to filter the pull requests. This is checked against a pull request's title. Example regex: `^\[Feat].*`.                      |              | **false**    |
+| **`commit_limit`**                       | Limit the number of commits to retrieve.                                                                                                                    | `250`        | **false**    |
 
 <!-- end inputs -->
 
-# License
+## Documentation
 
-The scripts and documentation in this project are released under the [MIT License](LICENSE).
+Please see the [documentation] for detailed information about installation and usage.
+
+## Contributing
+
+Please see [contributing] for more information about how you can contribute.
+
+## Changelog
+
+Please see [changelog] for more information about what has changed recently.
+
+## Upgrading
+
+Please see [upgrading] for more information about how to upgrade.
+
+## Security
+
+Please see [security] for more information about how we deal with security.
+
+## Credits
+
+We would like to thank the following contributors for their contributions to this project:
+
+- [All Contributors][all-contributors]
+
+## License
+
+The scripts and documentation in this project are released under the [MIT License][license].
+
+---
+
+<p align="center"><a href="https://van-ons.nl/" target="_blank"><img src="https://opensource.van-ons.nl/files/cow.png" width="50" alt="Logo of Van Ons"></a></p>
+
+[documentation]: docs
+[contributing]: CONTRIBUTING.md
+[changelog]: CHANGELOG.md
+[upgrading]: UPGRADING.md
+[security]: SECURITY.md
+[email]: mailto:opensource@van-ons.nl
+[all-contributors]: ../../contributors
+[license]: LICENSE.md

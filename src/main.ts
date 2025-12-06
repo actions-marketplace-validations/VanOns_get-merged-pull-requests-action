@@ -1,14 +1,11 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import {Octokit} from '@octokit/core'
-// eslint-disable-next-line import/no-unresolved
 import {components} from '@octokit/openapi-types'
-// eslint-disable-next-line import/no-unresolved
 import {Api} from '@octokit/plugin-rest-endpoint-methods/dist-types/types'
 import {PullRequestDefault, Repo} from './interfaces'
-
-const ALLOWED_RETURN_TYPES: string[] = ['title_only', 'all']
-const DEFAULT_RETURN_TYPE = 'title_only'
+import path from 'path'
+import fs from 'fs'
 
 const getRepo = (): Repo => {
   const repo = core.getInput('repo')
@@ -50,27 +47,29 @@ const getPreviousTag = async (
     return previousTag
   }
 
-  const tags = await client.rest.repos.listTags({
-    owner: repo.owner,
-    repo: repo.repo
-  })
+  const tags = (
+    await client.rest.repos.listTags({
+      owner: repo.owner,
+      repo: repo.repo
+    })
+  ).data
 
-  const index: number = tags.data.findIndex(tag => tag.name === currentTag)
+  const index: number = tags.findIndex(tag => tag.name === currentTag)
 
-  if (typeof tags.data[index + 1] === 'undefined') {
+  if (typeof tags[index + 1] === 'undefined') {
     return null
   }
 
-  return tags.data[index + 1].name
+  return tags[index + 1].name
 }
 
-const getReturnType = (): string => {
-  const returnType = core.getInput('return_type')
-  if (returnType && ALLOWED_RETURN_TYPES.includes(returnType)) {
-    return returnType
+const getCommitLimit = (): number | undefined => {
+  const commitLimit = parseInt(core.getInput('commit_limit'))
+  if (Number.isNaN(commitLimit)) {
+    return undefined
   }
 
-  return DEFAULT_RETURN_TYPE
+  return commitLimit
 }
 
 const getCommits = async (
@@ -79,20 +78,39 @@ const getCommits = async (
   currentTag: string,
   previousTag: string
 ): Promise<components['schemas']['commit'][] | null> => {
-  const commits = await client.rest.repos.compareCommitsWithBasehead({
+  const commitLimit = getCommitLimit()
+
+  core.debug(`Commit limit: ${commitLimit}`)
+
+  const response = await client.rest.repos.compareCommitsWithBasehead({
     owner: repo.owner,
     repo: repo.repo,
-    basehead: `${previousTag}...${currentTag}`
+    basehead: `${previousTag}...${currentTag}`,
+    per_page: commitLimit
   })
 
-  // The regex to use to determine if a commit is a pull request merge commit.
-  const commitIsPullRequestRegex = new RegExp(
-    core.getInput('commit_is_pull_request_regex') || /^Merge pull request.*/
-  )
+  let commits = response.data.commits
 
-  return commits.data.commits.filter(commit =>
-    commitIsPullRequestRegex.test(commit.commit.message)
-  )
+  const filterCommits =
+    (
+      core.getInput('apply_commit_is_pull_request_regex') || 'false'
+    ).toLowerCase() === 'true'
+
+  core.debug(`Filter commits: ${filterCommits}`)
+
+  if (filterCommits) {
+    // The regex to use to determine if a commit is a pull request merge commit.
+    const commitIsPullRequestRegex =
+      core.getInput('commit_is_pull_request_regex') || /^Merge pull request.*/
+
+    core.debug(`"Commit is pull request" regex: ${commitIsPullRequestRegex}`)
+
+    commits = commits.filter(commit =>
+      new RegExp(commitIsPullRequestRegex).test(commit.commit.message)
+    )
+  }
+
+  return commits
 }
 
 const getPullRequests = async (
@@ -127,7 +145,8 @@ const getPullRequests = async (
       items = items.concat(newItems)
       hashes = []
 
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      // GitHub has a rate limit of 30 requests per minute.
+      await new Promise(resolve => setTimeout(resolve, 2000))
     }
   }
 
@@ -142,14 +161,7 @@ const getPullRequests = async (
     items = items.filter(item => regex.test(item.title))
   }
 
-  switch (getReturnType()) {
-    case 'all':
-      return items
-    default:
-      return items.map(item => ({
-        title: item.title
-      }))
-  }
+  return items
 }
 
 const run = async (): Promise<void> => {
@@ -210,7 +222,17 @@ const run = async (): Promise<void> => {
     core.info(`${pullRequest.title}`)
   }
 
-  core.setOutput('pull_requests', pullRequests)
+  const outputDir = path.join(process.cwd(), 'output')
+  if (!fs.existsSync(outputDir)) {
+    fs.mkdirSync(outputDir)
+  }
+
+  const outputFile = path.join(outputDir, 'pull-requests.json')
+  fs.writeFileSync(outputFile, JSON.stringify(pullRequests, null, 2))
+
+  core.debug(`Pull requests written to ${outputFile}`)
+
+  core.setOutput('pull_requests_file', outputFile)
 }
 
 run()

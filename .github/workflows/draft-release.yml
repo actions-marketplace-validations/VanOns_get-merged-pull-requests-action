@@ -3,20 +3,18 @@ name: Draft release
 on:
   push:
     branches:
-      - main
-      - 'releases/*'
-#  pull_request:
-#    types: [opened, reopened, synchronize]
-#  pull_request_target:
-#    types: [opened, reopened, synchronize]
+      - master
+      - 'release/*'
 
 jobs:
   draft-release:
+    runs-on: ubuntu-latest
+
     permissions:
       contents: write
       pull-requests: write
-    runs-on: ubuntu-latest
+
     steps:
-      - uses: release-drafter/release-drafter@v5
+      - uses: release-drafter/release-drafter@v6
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
